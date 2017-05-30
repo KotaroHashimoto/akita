@@ -241,7 +241,7 @@ void OnTick()
   previousPrice = (Ask + Bid) / 2.0;
 
   if(0 < getOrdersTotal()) {
-      
+    trail();
   }
   
   else {
