@@ -330,7 +330,7 @@ void nampin() {
   if(0 < pips) {
     lbl = "+" + lbl;
   }
-  ObjectSetText(pipsLabel, lbl, 16, "Arial", clrYellow);
+  ObjectSetText(pipsLabel, "Total: " + lbl, 16, "Arial", clrYellow);
   
   if(pips < NampinStopLoss || NampinTakeProfit < pips) {
     closeAll();
@@ -389,6 +389,7 @@ void OnTick()
   }
   
   else {
+    ObjectSetText(pipsLabel, "", 16, "Arial", clrYellow);
   
     initialPosition = -1;
   
