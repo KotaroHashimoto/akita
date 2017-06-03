@@ -16,6 +16,9 @@ input double Slippage = 3.0; //[新規注文設定] 最大価格誤差(Pips)
 input double StopLoss = 0.0; //[新規注文設定] S/L:決済逆指値(Pips)
 input double TakeProfit = 30.0; //[新規注文設定] T/P:決済指値(Pips)
 
+input bool Compound = True; //[複利設定] 複利ロット計算 ON/OFF
+input double BaseEquity = 1000000; //[複利設定] 複利基準資金(円)
+
 
 enum Method {
   Simple = MODE_SMA,
@@ -75,6 +78,10 @@ input double AcceptableSpread = 3.0; //[スプレッドフィルタ設定] 許�
 
 string thisSymbol;
 double previousPrice;
+
+double minLot;
+double maxLot;
+double lotStep;
 
 int initialPosition;
 
@@ -181,6 +188,10 @@ int OnInit()
   {
 //---
 
+  minLot = MarketInfo(Symbol(), MODE_MINLOT);
+  maxLot = MarketInfo(Symbol(), MODE_MAXLOT);
+  lotStep = MarketInfo(Symbol(), MODE_LOTSTEP);
+  
   thisSymbol = Symbol();
   previousPrice = (Ask + Bid) / 2.0;
   initialPosition = -1;
@@ -340,20 +351,13 @@ void nampin() {
     if(initialPosition == OP_BUY) {
       if(Ask + RNampinSpan * 10.0 * Point < lowestLongPrice) {
         double lot = lowestLongLot + RNampinLot;
-        if(MarketInfo(Symbol(), MODE_MAXLOT) < lot) {
-          lot = MarketInfo(Symbol(), MODE_MAXLOT);
-        }
-        int ticket = OrderSend(Symbol(), OP_BUY, lot, NormalizeDouble(Ask, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrMagenta);
+        int ticket = OrderSend(Symbol(), OP_BUY, roundLot(lot), NormalizeDouble(Ask, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrMagenta);
       }
     }
     else if(initialPosition == OP_SELL) {
       if(highestShortPrice + RNampinSpan * 10.0 * Point < Bid) {
         double lot = highestShortLot + RNampinLot;
-        if(MarketInfo(Symbol(), MODE_MAXLOT) < lot) {
-          lot = MarketInfo(Symbol(), MODE_MAXLOT);
-        }
-
-        int ticket = OrderSend(Symbol(), OP_SELL, lot, NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
+        int ticket = OrderSend(Symbol(), OP_SELL, roundLot(lot), NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
       }
     }
   }  
@@ -361,15 +365,34 @@ void nampin() {
   if(FNampin) {
     if(initialPosition == OP_BUY) {
       if(Ask + FNampinSpan * 10.0 * Point < lowestLongPrice) {
-        int ticket = OrderSend(Symbol(), OP_SELL, FNampinLot, NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
+        int ticket = OrderSend(Symbol(), OP_SELL, roundLot(FNampinLot), NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
       }
     }
     else if(initialPosition == OP_SELL) {
       if(highestShortPrice + FNampinSpan * 10.0 * Point < Bid) {
-        int ticket = OrderSend(Symbol(), OP_BUY, FNampinLot, NormalizeDouble(Ask, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrMagenta);
+        int ticket = OrderSend(Symbol(), OP_BUY, roundLot(FNampinLot), NormalizeDouble(Ask, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrMagenta);
       }
     }
   }
+}
+
+
+double roundLot(double lot) {
+
+  if(Compound) {
+    lot *= AccountEquity() / BaseEquity;
+  }
+
+  lot = MathRound(lot / lotStep) * lotStep;
+  
+  if(maxLot < lot) {
+    lot = maxLot;
+  }
+  else if(lot < minLot) {
+    lot = 0.0;
+  }
+
+  return lot;
 }
 
 
@@ -401,14 +424,13 @@ void OnTick()
     }
     
     if(signal == OP_BUY) {    
-      int ticket = OrderSend(Symbol(), OP_BUY, EntryLot, NormalizeDouble(Ask, Digits), int(Slippage * 10.0), sltp(Ask, -10.0 * StopLoss * Point), sltp(Ask, 10.0 * TakeProfit * Point), Comment, MagicNumber, 0, clrMagenta);
+      int ticket = OrderSend(Symbol(), OP_BUY, roundLot(EntryLot), NormalizeDouble(Ask, Digits), int(Slippage * 10.0), sltp(Ask, -10.0 * StopLoss * Point), sltp(Ask, 10.0 * TakeProfit * Point), Comment, MagicNumber, 0, clrMagenta);
       initialPosition = OP_BUY;
     }
     else if(signal == OP_SELL) {
-      int ticket = OrderSend(Symbol(), OP_SELL, EntryLot, NormalizeDouble(Bid, Digits), int(Slippage * 10.0), sltp(Bid, 10.0 * StopLoss * Point), sltp(Bid, -10.0 * TakeProfit * Point), Comment, MagicNumber, 0, clrCyan);
+      int ticket = OrderSend(Symbol(), OP_SELL, roundLot(EntryLot), NormalizeDouble(Bid, Digits), int(Slippage * 10.0), sltp(Bid, 10.0 * StopLoss * Point), sltp(Bid, -10.0 * TakeProfit * Point), Comment, MagicNumber, 0, clrCyan);
       initialPosition = OP_SELL;
     }
   }   
 }
 //+------------------------------------------------------------------+
-
