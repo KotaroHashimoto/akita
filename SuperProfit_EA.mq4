@@ -86,6 +86,8 @@ void drawLabel() {
   ObjectSetInteger(0, pipsLabel, OBJPROP_CORNER, CORNER_LEFT_UPPER);
   ObjectSet(pipsLabel, OBJPROP_TIMEFRAMES, OBJ_ALL_PERIODS);
   ObjectSetInteger(0, pipsLabel, OBJPROP_SELECTABLE, false);
+
+  ObjectSetText(pipsLabel, "", 16, "Arial", clrYellow);
 }
 
 void getEnvelope(double& bottom, double& upper) {
