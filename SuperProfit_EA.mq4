@@ -9,9 +9,6 @@
 #property version   "1.00"
 #property strict
 
-// この番号の口座番号のアカウントでなければ稼働しない
-const int Account_Number = 12345678;
-
 input string Comment = "Akita"; //[新規注文設定] コメント
 input int MagicNumber = 777; //[新規注文設定] マジックナンバー
 input double EntryLot = 0.1; //[新規注文設定] 数量
@@ -64,8 +61,8 @@ input bool RNampin = True; //[ナンピン設定][逆張り] ON/OFF
 input double RNampinLot = 0.02; //[ナンピン設定][逆張り] 数量(増分)
 input double RNampinSpan = 30.0; //[ナンピン設定][逆張り] 間隔(Pips)
 
-input double NampinStopLoss = -100.0; //[ナンピン設定] ナンピン時の損切閾値(建玉の合計Pips)
-input double NampinTakeProfit = 100.0; //[ナンピン設定] ナンピン時の利確閾値(建玉の合計Pips)
+input double NampinStopLoss = -100.0; //[新規注文設定] S/L:決済逆指値(Pips)
+input double NampinTakeProfit = -100.0; //[新規注文設定] T/P:決済指値(Pips)
 
 
 input bool Trail = True; //[トレール設定] ON/OFF
@@ -80,6 +77,16 @@ string thisSymbol;
 double previousPrice;
 
 int initialPosition;
+
+const string pipsLabel = "plabel";
+
+void drawLabel() {
+
+  ObjectCreate(0, pipsLabel, OBJ_LABEL, 0, 0, 0);
+  ObjectSetInteger(0, pipsLabel, OBJPROP_CORNER, CORNER_LEFT_UPPER);
+  ObjectSet(pipsLabel, OBJPROP_TIMEFRAMES, OBJ_ALL_PERIODS);
+  ObjectSetInteger(0, pipsLabel, OBJPROP_SELECTABLE, false);
+}
 
 void getEnvelope(double& bottom, double& upper) {
 
@@ -175,6 +182,8 @@ int OnInit()
   thisSymbol = Symbol();
   previousPrice = (Ask + Bid) / 2.0;
   initialPosition = -1;
+  
+  drawLabel();
    
 //---
    return(INIT_SUCCEEDED);
@@ -185,6 +194,8 @@ int OnInit()
 void OnDeinit(const int reason)
   {
 //---
+
+  ObjectDelete(0, pipsLabel);
    
   }
   
@@ -312,6 +323,13 @@ void nampin() {
   double lowestLongLot;
   
   double pips = getHighLow(highestShortPrice, lowestLongPrice, highestShortLot, lowestLongLot);
+  
+  string lbl = DoubleToString(pips, 1) + " pips";
+  if(0 < pips) {
+    lbl = "+" + lbl;
+  }
+  ObjectSetText(pipsLabel, lbl, 16, "Arial", clrYellow);
+  
   if(pips < NampinStopLoss || NampinTakeProfit < pips) {
     closeAll();
   }
@@ -360,10 +378,6 @@ void OnTick()
   {
 //---
 
-  if(AccountNumber() != Account_Number) {
-    return;
-  }
-
   int signal = getSignal();
   previousPrice = (Ask + Bid) / 2.0;
 
@@ -373,6 +387,7 @@ void OnTick()
   }
   
   else {
+  
     initialPosition = -1;
   
     if(SpreadFilter) {
