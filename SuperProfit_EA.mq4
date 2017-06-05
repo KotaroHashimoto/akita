@@ -10,17 +10,17 @@
 #property strict
 
 // この番号の口座番号のアカウントでなければ稼働しない
-const int Account_Number = 12345678;
+const int Account_Number = 23099363;
 
 input string Comment = "Akita"; //[新規注文設定] コメント
-input int MagicNumber = 777; //[新規注文設定] マジックナンバー
-input double EntryLot = 0.1; //[新規注文設定] 数量
-input double Slippage = 3.0; //[新規注文設定] 最大価格誤差(Pips)
+input int MagicNumber = 1; //[新規注文設定] マジックナンバー
+input double EntryLot = 0.01; //[新規注文設定] 数量
+input double Slippage = 10.0; //[新規注文設定] 最大価格誤差(Pips)
 input double StopLoss = 0.0; //[新規注文設定] S/L:決済逆指値(Pips)
-input double TakeProfit = 30.0; //[新規注文設定] T/P:決済指値(Pips)
+input double TakeProfit = 10.0; //[新規注文設定] T/P:決済指値(Pips)
 
-input bool Compound = True; //[複利設定] 複利ロット計算 ON/OFF
-input double BaseEquity = 1000000; //[複利設定] 複利基準資金(円)
+input bool Compound = False; //[複利設定] 複利ロット計算 ON/OFF
+input double BaseEquity = 100000; //[複利設定] 複利基準資金
 
 
 enum Method {
@@ -45,7 +45,7 @@ enum PField {
   Close_Close = STO_CLOSECLOSE,
 };
 
-input int MA_Period = 100; //[Moving Average] 期間
+input int MA_Period = 200; //[Moving Average] 期間
 input Method MA_Method = Exponential; //[Moving Average] 種別
 input APrice MA_APrice = Close_Price; //[Moving Average] 適用価格
 input double MA_Level = 30.0; //[Moving Average] レベル(Pips)
@@ -61,22 +61,22 @@ input int SellLevel = 90; //[Stochastic Oscillator] レベル(SELL)
 
 input bool FNampin = True; //[ナンピン設定][順張り] ON/OFF 
 input double FNampinLot = 0.02; //[ナンピン設定][順張り] 数量
-input double FNampinSpan = 31.0; //[ナンピン設定][順張り] 間隔(Pips)
+input double FNampinSpan = 151.0; //[ナンピン設定][順張り] 間隔(Pips)
 
 input bool RNampin = True; //[ナンピン設定][逆張り] ON/OFF
 input double RNampinLot = 0.02; //[ナンピン設定][逆張り] 数量(増分)
-input double RNampinSpan = 30.0; //[ナンピン設定][逆張り] 間隔(Pips)
+input double RNampinSpan = 150.0; //[ナンピン設定][逆張り] 間隔(Pips)
 
-input double NampinStopLoss = -100.0; //[新規注文設定] S/L:決済逆指値(Pips)
-input double NampinTakeProfit = 100.0; //[新規注文設定] T/P:決済指値(Pips)
+input double NampinStopLoss = -100000.0; //[新規注文設定] S/L:決済逆指値(Pips)
+input double NampinTakeProfit = 10.0; //[新規注文設定] T/P:決済指値(Pips)
 
 
 input bool Trail = True; //[トレール設定] ON/OFF
-input double TrailStart = 7.0; //[トレール設定] トレール開始利益(Pips)
+input double TrailStart = 10.0; //[トレール設定] トレール開始利益(Pips)
 input double TrailSL = 1.5; //[トレール設定] トレール幅(Pips)
 
 input bool SpreadFilter = True; //[スプレッドフィルタ設定] ON/OFF
-input double AcceptableSpread = 3.0; //[スプレッドフィルタ設定] 許容スプレッド(Pips)
+input double AcceptableSpread = 5.0; //[スプレッドフィルタ設定] 許容スプレッド(Pips)
 
 
 string thisSymbol;
@@ -239,12 +239,12 @@ void trail() {
         if(OrderType() == OP_BUY) {
           if(OrderStopLoss() == 0){
             if(TrailStart * 10.0 * Point < Bid - OrderOpenPrice()) {
-              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), Bid - (Point * 10.0 * TrailSL), 0, 0);
+              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), sltp(Bid, -1.0 *Point * 10.0 * TrailSL), 0, 0);
             }
           }
           else {
             if(Point * 10.0 * TrailSL < Bid - OrderStopLoss()) {
-              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), Bid - (Point * 10.0 * TrailSL), 0, 0);
+              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), sltp(Bid, -1.0 * Point * 10.0 * TrailSL), 0, 0);
             }
           }
         }
@@ -252,12 +252,12 @@ void trail() {
         if(OrderType() == OP_SELL) {
           if(OrderStopLoss() == 0){
             if(TrailStart * 10.0 * Point < OrderOpenPrice() - Ask) {
-              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), Ask + (Point * 10.0 * TrailSL), 0, 0);
+              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), sltp(Ask, Point * 10.0 * TrailSL), 0, 0);
             }
           }
           else {
             if(Point * 10.0 * TrailSL < OrderStopLoss() - Ask) {
-              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), Ask + (Point * 10.0 * TrailSL), 0, 0);
+              bool mod = OrderModify(OrderTicket(), OrderOpenPrice(), sltp(Ask, Point * 10.0 * TrailSL), 0, 0);
             }
           }
         }
@@ -300,6 +300,57 @@ double getHighLow(double& highestShortPrice, double& lowestLongPrice, double& hi
 }
 
 
+double getHighLow(double& highestShortPrice, double& lowestLongPrice, double& highestShortLot, double& lowestLongLot, 
+                  double& highestLongPrice, double& lowestShortPrice) {
+
+  double pf = 0;
+
+  highestShortPrice = 0;
+  lowestLongPrice = 1000000;
+
+  highestLongPrice = 0;
+  lowestShortPrice = 1000000;
+
+  for(int i = 0; i < OrdersTotal(); i++) {  
+    if(OrderSelect(i, SELECT_BY_POS)) {
+      if(!StringCompare(OrderSymbol(), thisSymbol) && OrderMagicNumber() == MagicNumber) {
+      
+        if(OrderType() == OP_BUY) {
+          if(OrderOpenPrice() < lowestLongPrice) {
+            lowestLongPrice = OrderOpenPrice();
+            lowestLongLot = OrderLots();
+          }
+          if(highestLongPrice < OrderOpenPrice()) {
+            highestLongPrice = OrderOpenPrice();
+          }
+          
+          pf += Bid - OrderOpenPrice();
+        }
+        else if(OrderType() == OP_SELL) {
+          if(highestShortPrice < OrderOpenPrice()) {
+            highestShortPrice = OrderOpenPrice();
+            highestShortLot = OrderLots();
+          }
+          if(OrderOpenPrice() < lowestShortPrice) {
+            lowestShortPrice = OrderOpenPrice();
+          }
+
+          pf += OrderOpenPrice() - Ask;
+        }
+      }
+    }  
+  }
+  
+  if(lowestShortPrice == 1000000) {
+    lowestShortPrice = lowestLongPrice;
+  }
+  if(highestLongPrice == 0) {
+    highestLongPrice = highestShortPrice;
+  }
+  
+  return pf / (Point * 10.0);
+}
+
 void closeAll() {
 
   for(int i = 0; i < OrdersTotal(); i++) {
@@ -338,7 +389,11 @@ void nampin() {
   double highestShortLot;
   double lowestLongLot;
   
-  double pips = getHighLow(highestShortPrice, lowestLongPrice, highestShortLot, lowestLongLot);
+  double highestLongPrice;
+  double lowestShortPrice;
+
+  double pips = getHighLow(highestShortPrice, lowestLongPrice, highestShortLot, lowestLongLot, 
+                           highestLongPrice, lowestShortPrice);
   
   string lbl = DoubleToString(pips, 1) + " pips";
   if(0 < pips) {
@@ -366,13 +421,14 @@ void nampin() {
   }  
 
   if(FNampin) {
+  
     if(initialPosition == OP_BUY) {
-      if(Ask + FNampinSpan * 10.0 * Point < lowestLongPrice) {
-        int ticket = OrderSend(Symbol(), OP_SELL, roundLot(FNampinLot), NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
+      if(Bid + FNampinSpan * 10.0 * Point < lowestShortPrice) {
+        int ticket = OrderSend(Symbol(), OP_BUY, roundLot(FNampinLot), NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
       }
     }
     else if(initialPosition == OP_SELL) {
-      if(highestShortPrice + FNampinSpan * 10.0 * Point < Bid) {
+      if(highestLongPrice + FNampinSpan * 10.0 * Point < Ask) {
         int ticket = OrderSend(Symbol(), OP_BUY, roundLot(FNampinLot), NormalizeDouble(Ask, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrMagenta);
       }
     }
