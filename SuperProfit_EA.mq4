@@ -10,7 +10,7 @@
 #property strict
 
 // この番号の口座番号のアカウントでなければ稼働しない
-const int Account_Number = 23099363;
+const int Account_Number = 12345678;
 
 input string Comment = "Akita"; //[新規注文設定] コメント
 input int MagicNumber = 1; //[新規注文設定] マジックナンバー
