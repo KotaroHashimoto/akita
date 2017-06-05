@@ -267,39 +267,6 @@ void trail() {
 }
 
 
-double getHighLow(double& highestShortPrice, double& lowestLongPrice, double& highestShortLot, double& lowestLongLot) {
-
-  double pf = 0;
-
-  highestShortPrice = 0;
-  lowestLongPrice = 1000000;
-
-  for(int i = 0; i < OrdersTotal(); i++) {  
-    if(OrderSelect(i, SELECT_BY_POS)) {
-      if(!StringCompare(OrderSymbol(), thisSymbol) && OrderMagicNumber() == MagicNumber) {
-      
-        if(OrderType() == OP_BUY) {
-          if(OrderOpenPrice() < lowestLongPrice) {
-            lowestLongPrice = OrderOpenPrice();
-            lowestLongLot = OrderLots();
-          }
-          pf += Bid - OrderOpenPrice();
-        }
-        else if(OrderType() == OP_SELL) {
-          if(highestShortPrice < OrderOpenPrice()) {
-            highestShortPrice = OrderOpenPrice();
-            highestShortLot = OrderLots();
-          }
-          pf += OrderOpenPrice() - Ask;
-        }
-      }
-    }  
-  }
-  
-  return pf / (Point * 10.0);
-}
-
-
 double getHighLow(double& highestShortPrice, double& lowestLongPrice, double& highestShortLot, double& lowestLongLot, 
                   double& highestLongPrice, double& lowestShortPrice) {
 
