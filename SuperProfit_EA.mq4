@@ -391,7 +391,7 @@ void nampin() {
   
     if(initialPosition == OP_BUY) {
       if(Bid + FNampinSpan * 10.0 * Point < lowestShortPrice) {
-        int ticket = OrderSend(Symbol(), OP_BUY, roundLot(FNampinLot), NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
+        int ticket = OrderSend(Symbol(), OP_SELL, roundLot(FNampinLot), NormalizeDouble(Bid, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrCyan);
       }
     }
     else if(initialPosition == OP_SELL) {
