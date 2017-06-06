@@ -309,10 +309,10 @@ double getHighLow(double& highestShortPrice, double& lowestLongPrice, double& hi
   }
   
   if(lowestShortPrice == 1000000) {
-    lowestShortPrice = lowestLongPrice;
+    lowestShortPrice = lowestLongPrice - (Ask - Bid);
   }
   if(highestLongPrice == 0) {
-    highestLongPrice = highestShortPrice;
+    highestLongPrice = highestShortPrice + (Ask - Bid);
   }
   
   return pf / (Point * 10.0);
@@ -324,7 +324,7 @@ void closeAll() {
     if(OrderSelect(i, SELECT_BY_POS)) {
       if(!StringCompare(OrderSymbol(), thisSymbol) && OrderMagicNumber() == MagicNumber) {
         if(OrderType() == OP_BUY) {
-          if(!OrderClose(OrderTicket(), OrderLots(), NormalizeDouble(Bid, Digits), 0)) {
+          if(!OrderClose(OrderTicket(), OrderLots(), NormalizeDouble(Bid, Digits), 3)) {
             Print("Error on closing long order: ", GetLastError());
           }
           else {
@@ -395,7 +395,7 @@ void nampin() {
       }
     }
     else if(initialPosition == OP_SELL) {
-      if(highestLongPrice + FNampinSpan * 10.0 * Point < Ask) {
+      if(highestLongPrice < Ask - FNampinSpan * 10.0 * Point) {
         int ticket = OrderSend(Symbol(), OP_BUY, roundLot(FNampinLot), NormalizeDouble(Ask, Digits), int(Slippage * 10.0), 0, 0, Comment, MagicNumber, 0, clrMagenta);
       }
     }
