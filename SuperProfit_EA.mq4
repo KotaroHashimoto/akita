@@ -17,7 +17,7 @@ input int MagicNumber = 1; //[新規注文設定] マジックナンバー
 input double EntryLot = 0.01; //[新規注文設定] 数量
 input double Slippage = 10.0; //[新規注文設定] 最大価格誤差(Pips)
 input double StopLoss = 0.0; //[新規注文設定] S/L:決済逆指値(Pips)
-input double TakeProfit = 10.0; //[新規注文設定] T/P:決済指値(Pips)
+input double TakeProfit = 50.0; //[新規注文設定] T/P:決済指値(Pips)
 
 input bool Compound = False; //[複利設定] 複利ロット計算 ON/OFF
 input double BaseEquity = 100000; //[複利設定] 複利基準資金
@@ -61,19 +61,19 @@ input int SellLevel = 90; //[Stochastic Oscillator] レベル(SELL)
 
 input bool FNampin = True; //[ナンピン設定][順張り] ON/OFF 
 input double FNampinLot = 0.02; //[ナンピン設定][順張り] 数量
-input double FNampinSpan = 151.0; //[ナンピン設定][順張り] 間隔(Pips)
+input double FNampinSpan = 100.0; //[ナンピン設定][順張り] 間隔(Pips)
 
 input bool RNampin = True; //[ナンピン設定][逆張り] ON/OFF
 input double RNampinLot = 0.02; //[ナンピン設定][逆張り] 数量(増分)
-input double RNampinSpan = 150.0; //[ナンピン設定][逆張り] 間隔(Pips)
+input double RNampinSpan = 300.0; //[ナンピン設定][逆張り] 間隔(Pips)
 
-input double NampinStopLoss = -100000.0; //[新規注文設定] S/L:決済逆指値(Pips)
-input double NampinTakeProfit = 10.0; //[新規注文設定] T/P:決済指値(Pips)
+input double NampinStopLoss = -100000.0; //[ナンピン決済設定] S/L:損切決済合計Pips
+input double NampinTakeProfit = 50.0; //[ナンピン決済設定] T/P:利確決済合計Pips
 
 
 input bool Trail = True; //[トレール設定] ON/OFF
-input double TrailStart = 10.0; //[トレール設定] トレール開始利益(Pips)
-input double TrailSL = 1.5; //[トレール設定] トレール幅(Pips)
+input double TrailStart = 30.0; //[トレール設定] トレール開始利益(Pips)
+input double TrailSL = 15.0; //[トレール設定] トレール幅(Pips)
 
 input bool SpreadFilter = True; //[スプレッドフィルタ設定] ON/OFF
 input double AcceptableSpread = 5.0; //[スプレッドフィルタ設定] 許容スプレッド(Pips)
