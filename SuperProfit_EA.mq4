@@ -157,7 +157,7 @@ int getOrdersTotal() {
       Print(sbj, msg);
     }
     
-    if(previousProfit < 0 && 0 < profit) {
+    if(previousProfit <= 0.0 && 0.0 < profit) {
       string sbj = "Profit: +" + DoubleToStr(profit) + ", Equity:" + DoubleToStr(AccountEquity());
       string msg = IntegerToString(count) + " positions, " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
       bool mail = SendMail(sbj, msg);
