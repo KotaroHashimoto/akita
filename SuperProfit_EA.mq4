@@ -89,6 +89,7 @@ double lotStep;
 
 int initialPosition;
 int previousOrdersCount;
+double previousProfit;
 
 const string pipsLabel = "plabel";
 
@@ -131,16 +132,18 @@ int detStochastic() {
 int getOrdersTotal() {
 
   int count = 0;
+  double profit = 0.0;
   
   for(int i = 0; i < OrdersTotal(); i++) {
     if(OrderSelect(i, SELECT_BY_POS)) {
       if(!StringCompare(OrderSymbol(), thisSymbol) && OrderMagicNumber() == MagicNumber) {
         count ++;
+        profit += OrderProfit();
       }
     }
   }
   
-  if(0 <= previousOrdersCount) {
+  if(0 <= previousOrdersCount && Email) {
     if(count < previousOrdersCount) {
       string sbj = "SELL " + Symbol() + " (" + DoubleToStr(Ask, Digits) + "), Equity:" + DoubleToStr(AccountEquity());
       string msg = "SELL " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
@@ -153,9 +156,17 @@ int getOrdersTotal() {
       bool mail = SendMail(sbj, msg);
       Print(sbj, msg);
     }
+    
+    if(previousProfit < 0 && 0 < profit) {
+      string sbj = "Profit: +" + DoubleToStr(profit) + ", Equity:" + DoubleToStr(AccountEquity());
+      string msg = IntegerToString(count) + " positions, " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
+      bool mail = SendMail(sbj, msg);
+      Print(sbj, msg);
+    }
   }
 
   previousOrdersCount = count;
+  previousProfit = profit;
   return count;
 }
 
@@ -218,6 +229,7 @@ int OnInit()
   initialPosition = -1;
   
   previousOrdersCount = -1;
+  previousProfit = -1.0;
   
   drawLabel();
    
