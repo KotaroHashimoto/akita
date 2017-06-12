@@ -13,6 +13,7 @@
 const int Account_Number = 12345678;
 
 input string Comment = "Akita"; //[新規注文設定] コメント
+input bool Email = True; //[Eメール設定] トレード通知ON/OFF
 input int MagicNumber = 1; //[新規注文設定] マジックナンバー
 input double EntryLot = 0.01; //[新規注文設定] 数量
 input double Slippage = 10.0; //[新規注文設定] 最大価格誤差(Pips)
@@ -87,6 +88,7 @@ double maxLot;
 double lotStep;
 
 int initialPosition;
+int previousOrdersCount;
 
 const string pipsLabel = "plabel";
 
@@ -137,7 +139,23 @@ int getOrdersTotal() {
       }
     }
   }
+  
+  if(0 <= previousOrdersCount) {
+    if(count < previousOrdersCount) {
+      string sbj = "SELL " + Symbol() + " (" + DoubleToStr(Ask, Digits) + "), Equity:" + DoubleToStr(AccountEquity());
+      string msg = "SELL " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
+      bool mail = SendMail(sbj, msg);
+      Print(sbj, msg);
+    }
+    else if(previousOrdersCount < count) {
+      string sbj = "BUY " + Symbol() + " (" + DoubleToStr(Ask, Digits) + "), Equity:" + DoubleToStr(AccountEquity());
+      string msg = "BUY " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
+      bool mail = SendMail(sbj, msg);
+      Print(sbj, msg);
+    }
+  }
 
+  previousOrdersCount = count;
   return count;
 }
 
@@ -198,6 +216,8 @@ int OnInit()
   thisSymbol = Symbol();
   previousPrice = (Ask + Bid) / 2.0;
   initialPosition = -1;
+  
+  previousOrdersCount = -1;
   
   drawLabel();
    
