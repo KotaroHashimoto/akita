@@ -93,6 +93,8 @@ double previousProfit;
 
 const string pipsLabel = "plabel";
 
+datetime lastProfitTime;
+
 void drawLabel() {
 
   ObjectCreate(0, pipsLabel, OBJ_LABEL, 0, 0, 0);
@@ -145,23 +147,26 @@ int getOrdersTotal() {
   
   if(0 <= previousOrdersCount && Email) {
     if(count < previousOrdersCount) {
-      string sbj = "SELL " + Symbol() + " (" + DoubleToStr(Ask, Digits) + "), Equity:" + DoubleToStr(AccountEquity());
-      string msg = "SELL " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
+      string sbj = "Closed " + Symbol() + " (" + DoubleToStr(Bid, Digits) + "), Equity:" + DoubleToStr(AccountEquity());
+      string msg = "Closed " + Symbol() + " positions at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
       bool mail = SendMail(sbj, msg);
       Print(sbj, msg);
     }
     else if(previousOrdersCount < count) {
-      string sbj = "BUY " + Symbol() + " (" + DoubleToStr(Ask, Digits) + "), Equity:" + DoubleToStr(AccountEquity());
-      string msg = "BUY " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
+      string sbj = "Opened " + Symbol() + " (" + DoubleToStr(Bid, Digits) + "), Equity:" + DoubleToStr(AccountEquity());
+      string msg = "Opened " + Symbol() + " positions at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
       bool mail = SendMail(sbj, msg);
       Print(sbj, msg);
     }
     
     if(previousProfit <= 0.0 && 0.0 < profit) {
-      string sbj = "Profit: +" + DoubleToStr(profit) + ", Equity:" + DoubleToStr(AccountEquity());
-      string msg = IntegerToString(count) + " positions, " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
-      bool mail = SendMail(sbj, msg);
-      Print(sbj, msg);
+      if(600 < TimeLocal() - lastProfitTime) {
+        string sbj = "Profit: +" + DoubleToStr(profit) + ", Equity:" + DoubleToStr(AccountEquity());
+        string msg = IntegerToString(count) + " positions, " + Symbol() + " at " + DoubleToStr(Bid, Digits) + " - " + DoubleToStr(Ask, Digits) + ", " + TimeToStr(TimeLocal()) + ", " + AccountServer() + ", Equity:" + DoubleToStr(AccountEquity());
+        bool mail = SendMail(sbj, msg);
+        Print(sbj, msg);      
+      }
+      lastProfitTime = TimeLocal();
     }
   }
 
@@ -230,6 +235,8 @@ int OnInit()
   
   previousOrdersCount = -1;
   previousProfit = -1.0;
+  
+  lastProfitTime = TimeLocal();
   
   drawLabel();
    
