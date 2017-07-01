@@ -329,6 +329,9 @@ double getHighLow(double& highestShortPrice, double& lowestLongPrice, double& hi
           if(highestLongPrice < OrderOpenPrice()) {
             highestLongPrice = OrderOpenPrice();
           }
+          if(initialPosition == -1 && OrderLots() == EntryLot) {
+            initialPosition = OP_BUY;
+          }
           
           pf += Bid - OrderOpenPrice();
         }
@@ -339,6 +342,9 @@ double getHighLow(double& highestShortPrice, double& lowestLongPrice, double& hi
           }
           if(OrderOpenPrice() < lowestShortPrice) {
             lowestShortPrice = OrderOpenPrice();
+          }
+          if(initialPosition == -1 && OrderLots() == EntryLot) {
+            initialPosition = OP_SELL;
           }
 
           pf += OrderOpenPrice() - Ask;
